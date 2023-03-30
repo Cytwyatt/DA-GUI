@@ -11,7 +11,7 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
     QMainWindow, QStatusBar
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon
 import sys
 
 
@@ -22,21 +22,55 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(QSize(900, 600))
 
         self.toolbar = QToolBar('主工具栏')
+        self.toolbar.setIconSize(QSize(16, 16))
         self.addToolBar(self.toolbar)
 
-        self.file_button = QAction('文件', self)
-        self.file_button.setStatusTip('文件操作')
-        self.file_button.setCheckable(True)
-        self.toolbar.addAction(self.file_button)
+        self.exit_button_action = QAction(QIcon('./icons/exit.png'), '关闭', self)
+        self.exit_button_action.setStatusTip('关闭当前图层的图像')
+        self.toolbar.addAction(self.exit_button_action)
 
         self.toolbar.addSeparator()
 
-        self.analyse_button = QAction('数据分析', self)
-        self.analyse_button.setStatusTip('数据分析操作')
-        self.analyse_button.setCheckable(True)
-        self.toolbar.addAction(self.analyse_button)
+        self.zoom_in_button_action = QAction(QIcon('./icons/zoom_in.png'), '放大', self)
+        self.zoom_in_button_action.setStatusTip('放大当前图层的图像')
+        self.toolbar.addAction(self.zoom_in_button_action)
+
+        self.toolbar.addSeparator()
+
+        self.zoom_out_button_action = QAction(QIcon('./icons/zoom_out.png'), '缩小', self)
+        self.zoom_out_button_action.setStatusTip('缩小当前图层的图像')
+        self.toolbar.addAction(self.zoom_out_button_action)
 
         self.setStatusBar(QStatusBar(self))
+
+        self.menu = self.menuBar()
+
+        self.file_open_button_action = QAction('导入', self)
+        self.file_open_button_action.setStatusTip('导入一个待分析数据文件')
+        self.analysis_plot_scatter_button_action = QAction('散点图')
+        self.analysis_plot_box_button_action = QAction('箱线图')
+        self.analysis_outlier_button_action = QAction('离群点分析')
+        self.analysis_regression_button_action = QAction('回归分析')
+        self.analysis_classification_button_action = QAction('分类分析')
+        self.analysis_clustering_button_action = QAction('聚类分析')
+        self.analysis_reduction_button_action = QAction('降维分析')
+
+        self.file_menu = self.menu.addMenu('文件')
+        self.file_menu.addAction(self.file_open_button_action)
+        self.analysis_menu = self.menu.addMenu('分析')
+        self.analysis_plot_submenu = self.analysis_menu.addMenu('画图')
+        self.analysis_plot_submenu.addAction(self.analysis_plot_scatter_button_action)
+        self.analysis_plot_submenu.addAction(self.analysis_plot_box_button_action)
+        self.analysis_menu.addSeparator()
+        self.analysis_menu.addAction(self.analysis_outlier_button_action)
+        self.analysis_menu.addSeparator()
+        self.analysis_menu.addAction(self.analysis_regression_button_action)
+        self.analysis_menu.addSeparator()
+        self.analysis_menu.addAction(self.analysis_classification_button_action)
+        self.analysis_menu.addSeparator()
+        self.analysis_menu.addAction(self.analysis_clustering_button_action)
+        self.analysis_menu.addSeparator()
+        self.analysis_menu.addAction(self.analysis_reduction_button_action)
 
 
 if __name__ == '__main__':
