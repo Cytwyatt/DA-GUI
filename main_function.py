@@ -21,10 +21,24 @@ class MainFunction(MainWindow):
         super().__init__()
         self.file_path = None
         self.file_open_button_action.triggered.connect(self.open_file)
+        self.data_button.clicked.connect(self.check_plot_button)
+        self.plot_button.clicked.connect(self.check_data_button)
 
     def open_file(self):
         self.file_path = QFileDialog.getOpenFileNames(self, '选择文件', './')[0][0]
         self.text_list.addItem(self.file_path)
+
+    def check_data_button(self):
+        plot_button_check = self.plot_button.isChecked()
+        if plot_button_check:
+            self.data_button.setChecked(False)
+            self.info_layout.setCurrentIndex(1)
+
+    def check_plot_button(self):
+        file_button_check = self.data_button.isChecked()
+        if file_button_check:
+            self.plot_button.setChecked(False)
+            self.info_layout.setCurrentIndex(0)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@
 """
 
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
-    QMainWindow, QStatusBar, QLabel, QListWidget
+    QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction, QIcon
 import sys
@@ -78,15 +78,21 @@ class MainWindow(QMainWindow):
         self.plot_button.setCheckable(True)
 
         self.text_list = QListWidget()
+        self.plot_list = QListWidget()
         self.plot_label = QLabel()
 
         self.text_layout = QHBoxLayout()
         self.text_layout.addWidget(self.data_button)
         self.text_layout.addWidget(self.plot_button)
 
+        self.info_layout = QStackedLayout()
+        self.info_layout.addWidget(self.text_list)
+        self.info_layout.addWidget(self.plot_list)
+        self.info_layout.setCurrentIndex(0)
+
         self.layout1 = QVBoxLayout()
         self.layout1.addLayout(self.text_layout)
-        self.layout1.addWidget(self.text_list)
+        self.layout1.addLayout(self.info_layout)
 
         self.plot_layout = QHBoxLayout()
         self.plot_layout.addWidget(self.plot_label)
