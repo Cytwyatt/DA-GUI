@@ -9,7 +9,7 @@
 """
 
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
-    QMainWindow, QStatusBar
+    QMainWindow, QStatusBar, QLabel, QListWidget
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction, QIcon
 import sys
@@ -71,6 +71,35 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction(self.analysis_clustering_button_action)
         self.analysis_menu.addSeparator()
         self.analysis_menu.addAction(self.analysis_reduction_button_action)
+
+        self.data_button = QPushButton('显示数据')
+        self.plot_button = QPushButton('显示图像')
+        self.data_button.setCheckable(True)
+        self.plot_button.setCheckable(True)
+
+        self.text_list = QListWidget()
+        self.plot_label = QLabel()
+
+        self.text_layout = QHBoxLayout()
+        self.text_layout.addWidget(self.data_button)
+        self.text_layout.addWidget(self.plot_button)
+
+        self.layout1 = QVBoxLayout()
+        self.layout1.addLayout(self.text_layout)
+        self.layout1.addWidget(self.text_list)
+
+        self.plot_layout = QHBoxLayout()
+        self.plot_layout.addWidget(self.plot_label)
+
+        self.main_layout = QHBoxLayout()
+        self.main_layout.addLayout(self.layout1)
+        self.main_layout.addLayout(self.plot_layout)
+        self.main_layout.setStretch(0, 2)
+        self.main_layout.setStretch(1, 10)
+
+        self.main_widget = QWidget()
+        self.main_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.main_widget)
 
 
 if __name__ == '__main__':
