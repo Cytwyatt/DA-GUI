@@ -8,11 +8,62 @@
 # Description：The main UI py file for DA
 """
 
-from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
-    QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout
+from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QToolBar, \
+    QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout, QRadioButton, QLineEdit, QDialog, QDialogButtonBox
 from PySide6.QtCore import QSize
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction, QIcon, QFont
 import sys
+
+
+# noinspection PyUnresolvedReferences
+class InputDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.y_index = None
+        self.contain_title = None
+        self.setWindowTitle('输入文件设置')
+
+        self.title_label = QLabel('是否包含标题行')
+        self.y_index_label = QLabel('标签值所在列,0表示第一列,-1表示最后一列,不输入表示没有标签')
+
+        self.is_contain_title = QRadioButton('包含')
+        self.not_contain_title = QRadioButton('不包含')
+        self.is_contain_title.toggled.connect(self.contain_or_not)
+        self.not_contain_title.toggled.connect(self.contain_or_not)
+
+        self.y_index_edit = QLineEdit()
+
+        self.button = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+
+        self.button_box = QDialogButtonBox(self.button)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+
+        self.title_button_layout = QHBoxLayout()
+        self.title_button_layout.addWidget(self.is_contain_title)
+        self.title_button_layout.addWidget(self.not_contain_title)
+
+        self.title_layout = QVBoxLayout()
+        self.title_layout.addWidget(self.title_label)
+        self.title_layout.addLayout(self.title_button_layout)
+        self.title_layout.addWidget(self.y_index_label)
+        self.title_layout.addWidget(self.y_index_edit)
+
+        self.layout = QVBoxLayout()
+        self.layout.addLayout(self.title_layout)
+        self.layout.addWidget(self.button_box)
+        self.setLayout(self.layout)
+
+    def contain_or_not(self):
+        if self.is_contain_title.isChecked():
+            self.contain_title = True
+        else:
+            self.contain_title = False
+
+    def accept(self):
+        super().accept()
+        if self.y_index_edit.text():
+            self.y_index = int(self.y_index_edit.text())
 
 
 class MainWindow(QMainWindow):
@@ -47,22 +98,28 @@ class MainWindow(QMainWindow):
 
         self.file_open_button_action = QAction('导入', self)
         self.file_open_button_action.setStatusTip('导入一个待分析数据文件')
+        self.preprocess_outlier_button_action = QAction('离群点分析')
         self.analysis_plot_scatter_button_action = QAction('散点图')
         self.analysis_plot_box_button_action = QAction('箱线图')
-        self.analysis_outlier_button_action = QAction('离群点分析')
+        self.analysis_plot_hist_button_action = QAction('直方图')
         self.analysis_regression_button_action = QAction('回归分析')
         self.analysis_classification_button_action = QAction('分类分析')
         self.analysis_clustering_button_action = QAction('聚类分析')
         self.analysis_reduction_button_action = QAction('降维分析')
+        self.postprocess_pdp_button_action = QAction('PDP分析')
+        self.postprocess_ale_button_action = QAction('ALE分析')
+        self.postprocess_shap_button_action = QAction('Shap分析')
 
         self.file_menu = self.menu.addMenu('文件')
         self.file_menu.addAction(self.file_open_button_action)
+        self.preprocess_menu = self.menu.addMenu('预处理')
+        self.preprocess_menu.addAction(self.preprocess_outlier_button_action)
         self.analysis_menu = self.menu.addMenu('分析')
         self.analysis_plot_submenu = self.analysis_menu.addMenu('画图')
         self.analysis_plot_submenu.addAction(self.analysis_plot_scatter_button_action)
         self.analysis_plot_submenu.addAction(self.analysis_plot_box_button_action)
+        self.analysis_plot_submenu.addAction(self.analysis_plot_hist_button_action)
         self.analysis_menu.addSeparator()
-        self.analysis_menu.addAction(self.analysis_outlier_button_action)
         self.analysis_menu.addSeparator()
         self.analysis_menu.addAction(self.analysis_regression_button_action)
         self.analysis_menu.addSeparator()
@@ -71,6 +128,11 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addAction(self.analysis_clustering_button_action)
         self.analysis_menu.addSeparator()
         self.analysis_menu.addAction(self.analysis_reduction_button_action)
+        self.postprocess_menu = self.menu.addMenu('后处理')
+        self.postprocess_interpretation_submenu = self.postprocess_menu.addMenu('可解释性分析')
+        self.postprocess_interpretation_submenu.addAction(self.postprocess_pdp_button_action)
+        self.postprocess_interpretation_submenu.addAction(self.postprocess_ale_button_action)
+        self.postprocess_interpretation_submenu.addAction(self.postprocess_shap_button_action)
 
         self.file_button = QPushButton('显示文件')
         self.data_button = QPushButton('显示数据')
@@ -80,7 +142,10 @@ class MainWindow(QMainWindow):
         self.plot_button.setCheckable(True)
 
         self.file_text_list = QListWidget()
+        self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
+        self.file_text_list.addItem('--------------------------')
         self.data_text_list = QListWidget()
+        self.data_text_list.setFont(QFont('Times', 12))
         self.plot_list = QListWidget()
         self.plot_label = QLabel()
 

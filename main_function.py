@@ -8,26 +8,70 @@
 # Description：The main function py file for DA
 """
 
-from main_ui import MainWindow
+from main_ui import MainWindow, InputDialog
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
-    QMainWindow, QStatusBar, QLabel, QListWidget
+    QMainWindow, QStatusBar, QLabel, QListWidget, QDialog, QDialogButtonBox, QRadioButton, QLineEdit
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction, QIcon
 import sys
+import numpy as np
+import pandas as pd
 
 
+# noinspection PyArgumentList
 class MainFunction(MainWindow):
     def __init__(self):
         super().__init__()
         self.file_path = None
+        self.data = None
+        self.X = None
+        self.y = None
+        self.title = None
+        self.contain_title = None
+        self.y_index = None
         self.file_open_button_action.triggered.connect(self.open_file)
         self.file_button.clicked.connect(self.check_file_button)
         self.data_button.clicked.connect(self.check_data_button)
         self.plot_button.clicked.connect(self.check_plot_button)
 
     def open_file(self):
-        self.file_path = QFileDialog.getOpenFileNames(self, '选择文件', './')[0][0]
-        self.file_text_list.addItem(self.file_path)
+        self.file_text_list.clear()
+        self.data_text_list.clear()
+        self.plot_list.clear()
+        self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
+        self.file_text_list.addItem('--------------------------')
+        self.file_path = QFileDialog.getOpenFileNames(self, '选择文件', './', '数据文件(*.csv *.xlsx)')[0][0]
+        dialog = InputDialog()
+        dialog.exec()
+        self.contain_title = dialog.contain_title
+        self.y_index = dialog.y_index
+        self.file_text_list.addItem('Source: ' + self.file_path)
+        self.file_text_list.addItem('--------------------------')
+        if self.contain_title:
+            if self.file_path.split('/')[-1].split('.')[-1] == 'csv':
+                self.data = pd.read_csv(self.file_path)
+            else:
+                self.data = pd.read_excel(self.file_path)
+        else:
+            if self.file_path.split('/')[-1].split('.')[-1] == 'csv':
+                self.data = pd.read_csv(self.file_path, header=None)
+            else:
+                self.data = pd.read_excel(self.file_path, header=None)
+        if self.y_index is not None:
+            self.y = np.array(self.data.iloc[:, self.y_index]).flatten()
+            if self.contain_title:
+                self.X = np.array(
+                    self.data.loc[:, ~self.data.columns.isin([str(self.data.columns[self.y_index])])])
+            else:
+                self.X = np.array(
+                    self.data.loc[:, ~self.data.columns.isin([int(self.data.columns[self.y_index])])])
+            self.data_text_list.addItem(f'Data{self.data.shape[0]:->7}*{self.data.shape[1]}')
+            self.data_text_list.addItem(f'X{self.X.shape[0]:->10}*{self.X.shape[1]}')
+            self.data_text_list.addItem(f'y{len(self.y):->10}')
+        else:
+            self.X = np.array(self.data)
+            self.data_text_list.addItem(f'Data{self.data.shape[0]:->7}*{self.data.shape[1]}')
+            self.data_text_list.addItem(f'X{self.X.shape[0]:->10}*{self.X.shape[1]}')
 
     def check_plot_button(self):
         plot_button_check = self.plot_button.isChecked()
