@@ -21,22 +21,32 @@ class MainFunction(MainWindow):
         super().__init__()
         self.file_path = None
         self.file_open_button_action.triggered.connect(self.open_file)
-        self.data_button.clicked.connect(self.check_plot_button)
-        self.plot_button.clicked.connect(self.check_data_button)
+        self.file_button.clicked.connect(self.check_file_button)
+        self.data_button.clicked.connect(self.check_data_button)
+        self.plot_button.clicked.connect(self.check_plot_button)
 
     def open_file(self):
         self.file_path = QFileDialog.getOpenFileNames(self, '选择文件', './')[0][0]
-        self.text_list.addItem(self.file_path)
-
-    def check_data_button(self):
-        plot_button_check = self.plot_button.isChecked()
-        if plot_button_check:
-            self.data_button.setChecked(False)
-            self.info_layout.setCurrentIndex(1)
+        self.file_text_list.addItem(self.file_path)
 
     def check_plot_button(self):
-        file_button_check = self.data_button.isChecked()
+        plot_button_check = self.plot_button.isChecked()
+        if plot_button_check:
+            self.file_button.setChecked(False)
+            self.data_button.setChecked(False)
+            self.info_layout.setCurrentIndex(2)
+
+    def check_data_button(self):
+        data_button_check = self.data_button.isChecked()
+        if data_button_check:
+            self.file_button.setChecked(False)
+            self.plot_button.setChecked(False)
+            self.info_layout.setCurrentIndex(1)
+
+    def check_file_button(self):
+        file_button_check = self.file_button.isChecked()
         if file_button_check:
+            self.data_button.setChecked(False)
             self.plot_button.setChecked(False)
             self.info_layout.setCurrentIndex(0)
 

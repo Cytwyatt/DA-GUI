@@ -72,26 +72,31 @@ class MainWindow(QMainWindow):
         self.analysis_menu.addSeparator()
         self.analysis_menu.addAction(self.analysis_reduction_button_action)
 
+        self.file_button = QPushButton('显示文件')
         self.data_button = QPushButton('显示数据')
         self.plot_button = QPushButton('显示图像')
+        self.file_button.setCheckable(True)
         self.data_button.setCheckable(True)
         self.plot_button.setCheckable(True)
 
-        self.text_list = QListWidget()
+        self.file_text_list = QListWidget()
+        self.data_text_list = QListWidget()
         self.plot_list = QListWidget()
         self.plot_label = QLabel()
 
-        self.text_layout = QHBoxLayout()
-        self.text_layout.addWidget(self.data_button)
-        self.text_layout.addWidget(self.plot_button)
+        self.button_layout = QHBoxLayout()
+        self.button_layout.addWidget(self.file_button)
+        self.button_layout.addWidget(self.data_button)
+        self.button_layout.addWidget(self.plot_button)
 
         self.info_layout = QStackedLayout()
-        self.info_layout.addWidget(self.text_list)
+        self.info_layout.addWidget(self.file_text_list)
+        self.info_layout.addWidget(self.data_text_list)
         self.info_layout.addWidget(self.plot_list)
         self.info_layout.setCurrentIndex(0)
 
         self.layout1 = QVBoxLayout()
-        self.layout1.addLayout(self.text_layout)
+        self.layout1.addLayout(self.button_layout)
         self.layout1.addLayout(self.info_layout)
 
         self.plot_layout = QHBoxLayout()
