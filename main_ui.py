@@ -13,6 +13,20 @@ from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, Q
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction, QIcon, QFont
 import sys
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+import numpy as np
+import pandas as pd
+
+
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
+        welcome_data = np.array(pd.read_csv('./welcome.csv', header=None))
+        self.axes.plot(welcome_data[:, 0], welcome_data[:, 1])
+        super(MplCanvas, self).__init__(self.fig)
 
 
 # noinspection PyUnresolvedReferences
@@ -145,9 +159,12 @@ class MainWindow(QMainWindow):
         self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
         self.file_text_list.addItem('--------------------------')
         self.data_text_list = QListWidget()
+        self.plot_text_list = QListWidget()
+        self.plot_canvas = MplCanvas(self)
+        self.plot_toolbar = NavigationToolbar(self.plot_canvas, self)
+        self.file_text_list.setFont(QFont('Times', 12))
         self.data_text_list.setFont(QFont('Times', 12))
-        self.plot_list = QListWidget()
-        self.plot_label = QLabel()
+        self.plot_text_list.setFont(QFont('Times', 12))
 
         self.button_layout = QHBoxLayout()
         self.button_layout.addWidget(self.file_button)
@@ -157,15 +174,16 @@ class MainWindow(QMainWindow):
         self.info_layout = QStackedLayout()
         self.info_layout.addWidget(self.file_text_list)
         self.info_layout.addWidget(self.data_text_list)
-        self.info_layout.addWidget(self.plot_list)
+        self.info_layout.addWidget(self.plot_text_list)
         self.info_layout.setCurrentIndex(0)
 
         self.layout1 = QVBoxLayout()
         self.layout1.addLayout(self.button_layout)
         self.layout1.addLayout(self.info_layout)
 
-        self.plot_layout = QHBoxLayout()
-        self.plot_layout.addWidget(self.plot_label)
+        self.plot_layout = QVBoxLayout()
+        self.plot_layout.addWidget(self.plot_toolbar)
+        self.plot_layout.addWidget(self.plot_canvas)
 
         self.main_layout = QHBoxLayout()
         self.main_layout.addLayout(self.layout1)
