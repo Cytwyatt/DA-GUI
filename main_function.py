@@ -8,12 +8,10 @@
 # Description：The main function py file for DA
 """
 
-from main_ui import MainWindow, InputDialog, MplCanvas
-from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QFileDialog, QToolBar, \
-    QMainWindow, QStatusBar, QLabel, QListWidget, QDialog, QDialogButtonBox, QRadioButton, QLineEdit
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QAction, QIcon
+from main_ui import MainWindow, InputDialog, ScatterDialog
+from PySide6.QtWidgets import QApplication, QFileDialog
 import sys
+from utils.regression import *
 import numpy as np
 import pandas as pd
 
@@ -26,23 +24,21 @@ class MainFunction(MainWindow):
         self.data = None
         self.X = None
         self.y = None
+        self.title = None
         self.X_title = None
         self.y_title = None
         self.contain_title = None
         self.y_index = None
-        self.ax = None
+        self.ax = self.plot_canvas.axes
         self.file_open_button_action.triggered.connect(self.open_file)
         self.file_button.clicked.connect(self.check_file_button)
         self.data_button.clicked.connect(self.check_data_button)
         self.plot_button.clicked.connect(self.check_plot_button)
+        self.exit_button_action.triggered.connect(self.clear_all)
         self.analysis_plot_scatter_button_action.triggered.connect(self.plot_scatter)
 
     def open_file(self):
-        self.file_text_list.clear()
-        self.data_text_list.clear()
-        self.plot_text_list.clear()
-        self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
-        self.file_text_list.addItem('--------------------------')
+        self.clear_all()
         self.file_path = QFileDialog.getOpenFileNames(self, '选择文件', './', '数据文件(*.csv *.xlsx)')[0][0]
         dialog = InputDialog()
         dialog.exec()
@@ -55,13 +51,14 @@ class MainFunction(MainWindow):
                 self.data = pd.read_csv(self.file_path)
             else:
                 self.data = pd.read_excel(self.file_path)
-            title = list(self.data.columns)
+            self.title = list(self.data.columns)
             if self.y_index:
-                self.y_title = title[self.y_index]
-                title.remove(self.y_title)
-                self.X_title = title
+                self.y_title = self.title[self.y_index]
+                _title = self.title.copy()
+                _title.remove(self.y_title)
+                self.X_title = _title
             else:
-                self.X_title = title
+                self.X_title = self.title
         else:
             if self.file_path.split('/')[-1].split('.')[-1] == 'csv':
                 self.data = pd.read_csv(self.file_path, header=None)
@@ -109,10 +106,58 @@ class MainFunction(MainWindow):
             self.plot_button.setChecked(False)
             self.info_layout.setCurrentIndex(0)
 
-    def plot_scatter(self):
-        self.ax = self.plot_canvas.axes
+    def clear_all(self):
+        self.file_path = None
+        self.data = None
+        self.X = None
+        self.y = None
+        self.X_title = None
+        self.y_title = None
+        self.contain_title = None
+        self.y_index = None
         self.ax.cla()
-        self.ax.scatter(self.X, self.y)
+        self.plot_canvas.draw()
+        self.data_text_list.clear()
+        self.plot_text_list.clear()
+        self.file_text_list.clear()
+        self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
+        self.file_text_list.addItem('--------------------------')
+
+    def plot_scatter(self):
+        self.ax.cla()
+        dialog = ScatterDialog()
+        dialog.exec()
+        x_variable_index = dialog.x_variable_index
+        y_variable_index = dialog.y_variable_index
+        linear_fit_switch = dialog.linear_fit_switch
+        x = np.array(self.data.iloc[:, x_variable_index]).flatten()
+        y = np.array(self.data.iloc[:, y_variable_index]).flatten()
+        self.ax.scatter(x, y, marker='+', label='Original Data', alpha=0.8)
+        if linear_fit_switch:
+            w, b, r2, mse, mae, confidence = linear_fit(x, y)
+            linear_x = np.linspace(np.min(x), np.max(x), 100)
+            y_hat = w * linear_x + b
+            self.ax.plot(linear_x, y_hat, 'r-', lw=2, label='Linear Fit Line')
+            self.ax.plot(linear_x, y_hat - confidence, 'm:', lw=2, label='Confidence interval')
+            self.ax.plot(linear_x, y_hat + confidence, 'm:', lw=2)
+            if b >= 0:
+                self.ax.set_title(
+                    '$y = {:.5f}*x + {:.5f}$'.format(w, b) + '\n' + '$R^2 = {:.5f}$  MSE = {:.5f}  MAE = {:.5f}'.format(
+                        r2, mse, mae),
+                    fontdict={'fontsize': 13})
+            else:
+                self.ax.set_title(
+                    '$y = {:.5f}*x {:.5f}$'.format(w, b) + '\n' + '$R^2 = {:.5f}$  MSE = {:.5f}  MAE = {:.5f}'.format(
+                        r2, mse, mae),
+                    fontdict={'fontsize': 13})
+        if self.title:
+            self.ax.set_xlabel(f'{self.title[x_variable_index]}', fontdict={'fontsize': 13})
+            self.ax.set_ylabel(f'{self.title[y_variable_index]}', fontdict={'fontsize': 13})
+        else:
+            self.ax.set_xlabel('x variable', fontdict={'fontsize': 13})
+            self.ax.set_ylabel('y variable', fontdict={'fontsize': 13})
+        self.ax.legend(fontsize=12)
+        self.ax.grid()
         self.plot_canvas.draw()
 
 

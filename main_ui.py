@@ -9,7 +9,8 @@
 """
 
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QToolBar, \
-    QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout, QRadioButton, QLineEdit, QDialog, QDialogButtonBox
+    QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout, QRadioButton, QLineEdit, QDialog, QDialogButtonBox, \
+    QTableWidget
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QAction, QIcon, QFont
 import sys
@@ -78,6 +79,69 @@ class InputDialog(QDialog):
         super().accept()
         if self.y_index_edit.text():
             self.y_index = int(self.y_index_edit.text())
+
+
+# noinspection PyUnresolvedReferences
+class ScatterDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.x_variable_index = None
+        self.y_variable_index = None
+        self.linear_fit_switch = None
+        self.setWindowTitle('散点图设置')
+
+        self.variable_label = QLabel('选择散点图的X-Y轴变量,以输入数据(Data)为基准,0开始')
+        self.linear_fit_label = QLabel('是否进行线性拟合')
+
+        self.x_variable_index_edit = QLineEdit()
+        self.y_variable_index_edit = QLineEdit()
+        self.x_variable_index_edit.setPlaceholderText('X变量索引')
+        self.y_variable_index_edit.setPlaceholderText('Y变量索引')
+
+        self.is_linear_fit = QRadioButton('是')
+        self.not_linear_fit = QRadioButton('否')
+        self.is_linear_fit.toggled.connect(self.fit_or_not)
+        self.not_linear_fit.toggled.connect(self.fit_or_not)
+
+        self.button = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+
+        self.button_box = QDialogButtonBox(self.button)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+
+        self.variable_layout = QHBoxLayout()
+        self.variable_layout.addWidget(self.x_variable_index_edit)
+        self.variable_layout.addWidget(self.y_variable_index_edit)
+
+        self.linear_button_layout = QHBoxLayout()
+        self.linear_button_layout.addWidget(self.is_linear_fit)
+        self.linear_button_layout.addWidget(self.not_linear_fit)
+
+        self.linear_layout = QVBoxLayout()
+        self.linear_layout.addWidget(self.linear_fit_label)
+        self.linear_layout.addLayout(self.linear_button_layout)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.variable_label)
+        self.layout.addLayout(self.variable_layout)
+        self.layout.addLayout(self.linear_layout)
+        self.layout.addWidget(self.button_box)
+
+        self.setLayout(self.layout)
+
+    def fit_or_not(self):
+        if self.is_linear_fit.isChecked():
+            self.linear_fit_switch = True
+        else:
+            self.linear_fit_switch = False
+
+    def accept(self):
+        super().accept()
+        if self.x_variable_index_edit.text() and self.y_variable_index_edit.text():
+            self.x_variable_index = int(self.x_variable_index_edit.text())
+            self.y_variable_index = int(self.y_variable_index_edit.text())
+        else:
+            raise ValueError('请输入一个索引号')
 
 
 class MainWindow(QMainWindow):
