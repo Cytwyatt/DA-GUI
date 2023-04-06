@@ -10,14 +10,48 @@
 
 from PySide6.QtWidgets import QWidget, QPushButton, QApplication, QVBoxLayout, QHBoxLayout, QToolBar, \
     QMainWindow, QStatusBar, QLabel, QListWidget, QStackedLayout, QRadioButton, QLineEdit, QDialog, QDialogButtonBox, \
-    QTableWidget
-from PySide6.QtCore import QSize
+    QTableWidget, QTableWidgetItem
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QIcon, QFont
 import sys
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
+
+
+class ArrayWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.name_label = QLabel('Array Name: ')
+        self.tabel = QTableWidget()
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.name_label)
+        self.layout.addWidget(self.tabel)
+        self.setLayout(self.layout)
+
+    def set_array_data(self, array, name='Array Name: '):
+        self.name_label.setText(name)
+        self.tabel.setRowCount(array.shape[0])
+        self.tabel.setColumnCount(array.shape[1])
+        for i in range(array.shape[0]):
+            for j in range(array.shape[1]):
+                item = QTableWidgetItem(str(array[i, j]))
+                item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                self.tabel.setItem(i, j, item)
+
+
+class ArrayDialog(QDialog):
+    def __init__(self, array, name):
+        super().__init__()
+        self.setWindowTitle('数据预览')
+        self.array_widget = ArrayWidget()
+        self.array_widget.set_array_data(array, name)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.array_widget)
+        self.setLayout(self.layout)
 
 
 class MplCanvas(FigureCanvasQTAgg):

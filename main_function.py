@@ -8,7 +8,7 @@
 # Description：The main function py file for DA
 """
 
-from main_ui import MainWindow, InputDialog, ScatterDialog
+from main_ui import MainWindow, InputDialog, ScatterDialog, ArrayDialog
 from PySide6.QtWidgets import QApplication, QFileDialog
 import sys
 from utils.regression import *
@@ -21,7 +21,7 @@ class MainFunction(MainWindow):
     def __init__(self):
         super().__init__()
         self.file_path = None
-        self.data = None
+        self.Data = None
         self.X = None
         self.y = None
         self.title = None
@@ -35,6 +35,7 @@ class MainFunction(MainWindow):
         self.data_button.clicked.connect(self.check_data_button)
         self.plot_button.clicked.connect(self.check_plot_button)
         self.exit_button_action.triggered.connect(self.clear_all)
+        self.data_text_list.doubleClicked.connect(self.data_item_double_clicked)
         self.analysis_plot_scatter_button_action.triggered.connect(self.plot_scatter)
 
     def open_file(self):
@@ -48,10 +49,10 @@ class MainFunction(MainWindow):
         self.file_text_list.addItem('--------------------------')
         if self.contain_title:
             if self.file_path.split('/')[-1].split('.')[-1] == 'csv':
-                self.data = pd.read_csv(self.file_path)
+                self.Data = pd.read_csv(self.file_path)
             else:
-                self.data = pd.read_excel(self.file_path)
-            self.title = list(self.data.columns)
+                self.Data = pd.read_excel(self.file_path)
+            self.title = list(self.Data.columns)
             if self.y_index:
                 self.y_title = self.title[self.y_index]
                 _title = self.title.copy()
@@ -61,29 +62,35 @@ class MainFunction(MainWindow):
                 self.X_title = self.title
         else:
             if self.file_path.split('/')[-1].split('.')[-1] == 'csv':
-                self.data = pd.read_csv(self.file_path, header=None)
+                self.Data = pd.read_csv(self.file_path, header=None)
             else:
-                self.data = pd.read_excel(self.file_path, header=None)
+                self.Data = pd.read_excel(self.file_path, header=None)
         if self.y_index is not None:
-            self.y = np.array(self.data.iloc[:, self.y_index]).flatten()
+            self.y = np.array(self.Data.iloc[:, self.y_index]).flatten()
             if self.contain_title:
                 self.X = np.array(
-                    self.data.loc[:, ~self.data.columns.isin([str(self.data.columns[self.y_index])])])
+                    self.Data.loc[:, ~self.Data.columns.isin([str(self.Data.columns[self.y_index])])])
             else:
                 self.X = np.array(
-                    self.data.loc[:, ~self.data.columns.isin([int(self.data.columns[self.y_index])])])
-            self.data_text_list.addItem(f'Data{self.data.shape[0]:->9}*{self.data.shape[1]}')
+                    self.Data.loc[:, ~self.Data.columns.isin([int(self.Data.columns[self.y_index])])])
+            self.data_text_list.addItem(f'Data{self.Data.shape[0]:->9}*{self.Data.shape[1]}')
             self.data_text_list.addItem(f'X{self.X.shape[0]:->12}*{self.X.shape[1]}')
             self.data_text_list.addItem(f'y{len(self.y):->12}')
         else:
-            self.X = np.array(self.data)
-            self.data_text_list.addItem(f'Data{self.data.shape[0]:->9}*{self.data.shape[1]}')
+            self.X = np.array(self.Data)
+            self.data_text_list.addItem(f'Data{self.Data.shape[0]:->9}*{self.Data.shape[1]}')
             self.data_text_list.addItem(f'X{self.X.shape[0]:->12}*{self.X.shape[1]}')
         if self.y_title:
-            self.data_text_list.addItem(f'X Title{len(self.X_title):->4}')
-            self.data_text_list.addItem(f'y Title{len([self.y_title]):->4}')
+            self.data_text_list.addItem(f'X title{len(self.X_title):->4}')
+            self.data_text_list.addItem(f'y title{len([self.y_title]):->4}')
         elif self.X_title:
-            self.data_text_list.addItem(f'X Title{len(self.X_title):->4}')
+            self.data_text_list.addItem(f'X title{len(self.X_title):->4}')
+        self.Data = np.array(self.Data)
+        self.y = self.y.reshape(-1, 1)
+        self.X_title = np.array(self.X_title)
+        self.y_title = np.array(self.y_title)
+        self.X_title = self.X_title.reshape(1, -1)
+        self.y_title = self.y_title.reshape(1, -1)
 
     def check_plot_button(self):
         plot_button_check = self.plot_button.isChecked()
@@ -108,7 +115,7 @@ class MainFunction(MainWindow):
 
     def clear_all(self):
         self.file_path = None
-        self.data = None
+        self.Data = None
         self.X = None
         self.y = None
         self.X_title = None
@@ -123,6 +130,15 @@ class MainFunction(MainWindow):
         self.file_text_list.addItem('请一次导入一个csv或xlsx文件')
         self.file_text_list.addItem('--------------------------')
 
+    def data_item_double_clicked(self, item_index):
+        item = self.data_text_list.item(item_index.row())
+        array_name = item.text().split('-')[0].replace(' ', '_')
+        array = getattr(self, array_name)
+        dialog = ArrayDialog(array, array_name)
+        dialog.setModal(False)
+        dialog.show()
+        dialog.exec()
+
     def plot_scatter(self):
         self.ax.cla()
         dialog = ScatterDialog()
@@ -130,8 +146,8 @@ class MainFunction(MainWindow):
         x_variable_index = dialog.x_variable_index
         y_variable_index = dialog.y_variable_index
         linear_fit_switch = dialog.linear_fit_switch
-        x = np.array(self.data.iloc[:, x_variable_index]).flatten()
-        y = np.array(self.data.iloc[:, y_variable_index]).flatten()
+        x = np.array(self.Data.iloc[:, x_variable_index]).flatten()
+        y = np.array(self.Data.iloc[:, y_variable_index]).flatten()
         self.ax.scatter(x, y, marker='+', label='Original Data', alpha=0.8)
         if linear_fit_switch:
             w, b, r2, mse, mae, confidence = linear_fit(x, y)
